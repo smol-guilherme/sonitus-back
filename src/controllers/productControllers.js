@@ -19,34 +19,29 @@ export async function addItem(req, res) {
 
 export async function getItems(req, res) {
   let params = req.query;
-  let query;
+  const query = {};
+  const querySample = {};
   switch (true) {
     case params.id !== undefined:
-      query = { _id: ObjectId(params.id) };
+      query._id = ObjectId(params.id);
+      querySample.size = 1;
       break;
     case params.genre !== undefined:
-      console.log("bzzz");
-      query = { genre: params.genre };
-      break;
-    case params.id === undefined:
-    case params.genre === undefined:
-      query = {};
+      query.genre = params.genre;
+      querySample.size = 3;
       break;
     default:
-      query = {};
+      querySample.size = 10;
       break;
   }
-  console.log(query);
   try {
     const response = await db
       .collection(PRODUCTS_COLLECTION)
       .aggregate([
-        { $match: { genre: query.genre } },
-        { $group: { _id: "$_id" } },
-        { $limit: 1 },
+        { $match: query },
+        { $sample: querySample }
       ])
       .toArray();
-    console.log(response);
     res.status(200).send(response);
     return;
   } catch (err) {
