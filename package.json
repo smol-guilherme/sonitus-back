@@ -20,9 +20,13 @@
   },
   "homepage": "https://github.com/smol-guilherme/sonitus-back#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "mongodb": "^4.7.0",
+    "string-strip-html": "^9.1.13",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"
