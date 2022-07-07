@@ -17,28 +17,32 @@ export async function addItem(req, res) {
 
 export async function getItems(req, res) {
   let params = req.query;
-  const query = {};
-  const querySample = {};
+  let StageOne;
+  let StageTwo;
   try {
     switch (true) {
+      case params.genre === "Sample":
+        StageOne = { $match: {} };
+        StageTwo = [{ $group: { _id: "$genre" } }, { $sort: { _id: 1 } }];
+        break;
       case params.id !== undefined:
-        query._id = ObjectId(res.locals.cleanData || params.id);
-        querySample.size = 1;
+        StageOne = {
+          $match: { _id: ObjectId(res.locals.cleanData || params.id) },
+        };
+        StageTwo = [{ $sample: { size: 1 } }];
         break;
       case params.genre !== undefined:
-        query.genre = params.genre;
-        querySample.size = 3;
+        StageOne = { $match: { genre: params.genre } };
+        StageTwo = [{ $sample: { size: 3 } }];
         break;
       default:
-        querySample.size = 10;
+        StageOne = { $match: {} };
+        StageTwo = [{ $sample: { size: 10 } }];
         break;
     }
     const response = await db
       .collection(PRODUCTS_COLLECTION)
-      .aggregate([
-        { $match: query },
-        { $sample: querySample }
-      ])
+      .aggregate([StageOne, ...StageTwo])
       .toArray();
     res.status(200).send(response);
     return;
