@@ -19,6 +19,7 @@ export async function getItems(req, res) {
   let params = req.query;
   let StageOne;
   let StageTwo;
+  let response;
   try {
     switch (true) {
       case params.genre === "Sample":
@@ -31,6 +32,32 @@ export async function getItems(req, res) {
         };
         StageTwo = [{ $sample: { size: 1 } }];
         break;
+
+
+      case params.genre === "All":
+        StageOne = { $match: {} };
+        StageTwo = [{ $group: { _id: "$genre" } }, { $sort: { _id: 1 } }];
+        response = await db
+        .collection(PRODUCTS_COLLECTION)
+        .aggregate([StageOne, ...StageTwo])
+        .toArray();
+        const final = []
+
+        for(let i = 0; i < response.length; i ++){
+          
+          StageOne = { $match: { genre: response[i]._id } };
+          StageTwo = [{ $sample: { size: 4 } }];
+          const setup= await db
+          .collection(PRODUCTS_COLLECTION)
+          .aggregate([StageOne, ...StageTwo])
+          .toArray();
+          const obj = {title: response[i]._id, arr: setup};
+          final.push(obj)
+        } 
+        return res.status(200).send(final)
+        
+
+        
       case params.genre !== undefined:
         StageOne = { $match: { genre: params.genre } };
         StageTwo = [{ $sample: { size: 20 } }];
@@ -40,7 +67,7 @@ export async function getItems(req, res) {
         StageTwo = [{ $sample: { size: 10 } }];
         break;
     }
-    const response = await db
+     response = await db
       .collection(PRODUCTS_COLLECTION)
       .aggregate([StageOne, ...StageTwo])
       .toArray();
@@ -51,3 +78,4 @@ export async function getItems(req, res) {
     return;
   }
 }
+
