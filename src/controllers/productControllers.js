@@ -54,10 +54,10 @@ export async function getItems(req, res) {
           const obj = {title: response[i]._id, arr: setup};
           final.push(obj)
         } 
-        return res.status(200).send(final)
+        return res.status(200).send(final);
         
 
-        
+
       case params.genre !== undefined:
         StageOne = { $match: { genre: params.genre } };
         StageTwo = [{ $sample: { size: 20 } }];
