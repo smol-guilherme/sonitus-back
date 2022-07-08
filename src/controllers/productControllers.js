@@ -1,7 +1,9 @@
 import db from "../database/database.js";
 import { ObjectId } from "mongodb";
+import { getGenresSample, getHomeData } from "../handlers/productHandler.js";
 
 const PRODUCTS_COLLECTION = process.env.MONGO_PRODUCTS_COLLECTION;
+
 
 export async function addItem(req, res) {
   const data = req.body;
@@ -26,6 +28,7 @@ export async function getItems(req, res) {
         StageOne = { $match: {} };
         StageTwo = [{ $group: { _id: "$genre" } }, { $sort: { _id: 1 } }];
         break;
+
       case params.id !== undefined:
         StageOne = {
           $match: { _id: ObjectId(res.locals.cleanData || params.id) },
@@ -33,34 +36,18 @@ export async function getItems(req, res) {
         StageTwo = [{ $sample: { size: 1 } }];
         break;
 
-
       case params.genre === "All":
-        StageOne = { $match: {} };
-        StageTwo = [{ $group: { _id: "$genre" } }, { $sort: { _id: 1 } }];
-        response = await db
-        .collection(PRODUCTS_COLLECTION)
-        .aggregate([StageOne, ...StageTwo])
-        .toArray();
-        const final = []
-
-        for(let i = 0; i < response.length; i ++){
-          
-          StageOne = { $match: { genre: response[i]._id } };
-          StageTwo = [{ $sample: { size: 4 } }];
-          const setup= await db
-          .collection(PRODUCTS_COLLECTION)
-          .aggregate([StageOne, ...StageTwo])
-          .toArray();
-          const obj = {title: response[i]._id, arr: setup};
-          final.push(obj)
-        } 
-        return res.status(200).send(final);
+        response = await getGenresSample();
+        return res.status(200).send(response);
         
-
       case params.genre !== undefined:
         StageOne = { $match: { genre: params.genre } };
         StageTwo = [{ $sample: { size: 20 } }];
         break;
+      
+      case params.home !== undefined:
+        response = await getHomeData()
+        return res.status(200).send(response);
       default:
         StageOne = { $match: {} };
         StageTwo = [{ $sample: { size: 10 } }];
