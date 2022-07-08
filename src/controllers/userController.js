@@ -34,7 +34,7 @@ export const signIn = async (req,res) => {
     
     const login = res.locals.cleanData;
 
-    try {
+    
         
         const user = await db.collection(ACCOUNTS_COLLECTION).findOne({email: login.email});
 
@@ -43,9 +43,15 @@ export const signIn = async (req,res) => {
             const session = await db.collection(ACCOUNTS_COLLECTION).findOne({userId: user._id});
             
             if(session){
+        
                 return res.send({token: session.token , name: user.name}).status(200);
             }
             const token = uuid();
+            const data ={
+                token: token,
+                userId: user._id,
+                name: user.name,
+            }
             await db.collection(SESSIONS_COLLECTION).insertOne(data);
             return res.send({token: token, name: user.name}).status(201);
             
@@ -53,7 +59,5 @@ export const signIn = async (req,res) => {
             return res.sendStatus(401);
         }
 
-    } catch (error) {
-        return res.sendStatus(500);
-    }
+    
 }
