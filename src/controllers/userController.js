@@ -33,8 +33,6 @@ export const signUp = async (req,res) => {
 export const signIn = async (req,res) => {
     
     const login = res.locals.cleanData;
-
-    
         
         const user = await db.collection(ACCOUNTS_COLLECTION).findOne({email: login.email});
     try{
@@ -61,6 +59,4 @@ export const signIn = async (req,res) => {
     }catch{
         return res.sendStatus(500);
     }
-
-    
 }
