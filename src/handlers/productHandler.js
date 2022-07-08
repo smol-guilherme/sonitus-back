@@ -30,7 +30,20 @@ export async function getGenresSample (){
   }
 
   export async function getHomeData (){
-
-    return null
-
+    const bestSellers = await db
+        .collection(PRODUCTS_COLLECTION)
+        .find()
+        .sort({stock: -1})
+        .limit(7)
+        .toArray();
+        
+    const worstSellers = await db
+        .collection(PRODUCTS_COLLECTION)
+        .find()
+        .sort({stock: +1})
+        .limit(7)
+        .toArray();
+    
+    const response = {best: bestSellers, discover: worstSellers};
+    return response;
   }

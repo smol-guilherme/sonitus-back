@@ -7,5 +7,5 @@ const productRouter = Router();
 
 productRouter.post('/products', findDuplicate, addItem);
 productRouter.get('/products', clearData,  getItems);
-
+//productRouter.put('/products', editItem)
 export default productRouter;
