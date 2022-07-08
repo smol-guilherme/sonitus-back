@@ -37,7 +37,7 @@ export const signIn = async (req,res) => {
     
         
         const user = await db.collection(ACCOUNTS_COLLECTION).findOne({email: login.email});
-
+    try{
         if(user && bcrypt.compareSync(login.password, user.password)){
 
             const session = await db.collection(ACCOUNTS_COLLECTION).findOne({userId: user._id});
@@ -58,6 +58,9 @@ export const signIn = async (req,res) => {
         }else{
             return res.sendStatus(401);
         }
+    }catch{
+        return res.sendStatus(500);
+    }
 
     
 }
