@@ -33,7 +33,7 @@ export async function getItems(req, res) {
         break;
       case params.genre !== undefined:
         StageOne = { $match: { genre: params.genre } };
-        StageTwo = [{ $sample: { size: 3 } }];
+        StageTwo = [{ $sample: { size: 20 } }];
         break;
       default:
         StageOne = { $match: {} };

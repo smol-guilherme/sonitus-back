@@ -45,16 +45,9 @@ export const signIn = async (req,res) => {
             if(session){
                 return res.send({token: session.token , name: user.name}).status(200);
             }
-
             const token = uuid();
-            let data = {
-                token: token,
-                userId: user._id,
-                name: user.name
-            }
-
             await db.collection(SESSIONS_COLLECTION).insertOne(data);
-            return res.send({data: data}).status(201);
+            return res.send({token: token, name: user.name}).status(201);
             
         }else{
             return res.sendStatus(401);
