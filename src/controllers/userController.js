@@ -45,9 +45,7 @@ export const signIn = async (req,res) => {
             if(session){
                 return res.send({token: session.token , name: user.name}).status(200);
             }
-
             const token = uuid();
-            
             await db.collection(SESSIONS_COLLECTION).insertOne(data);
             return res.send({token: token, name: user.name}).status(201);
             
