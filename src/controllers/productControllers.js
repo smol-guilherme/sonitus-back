@@ -57,7 +57,6 @@ export async function getItems(req, res) {
         return res.status(200).send(final);
         
 
-
       case params.genre !== undefined:
         StageOne = { $match: { genre: params.genre } };
         StageTwo = [{ $sample: { size: 20 } }];
