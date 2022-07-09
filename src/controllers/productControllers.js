@@ -44,14 +44,16 @@ export async function getItems(req, res) {
         StageOne = { $match: { genre: params.genre } };
         StageTwo = [{ $sample: { size: 20 } }];
         break;
-      
+
       case params.home !== undefined:
         response = await getHomeData()
         return res.status(200).send(response);
+
       default:
         StageOne = { $match: {} };
         StageTwo = [{ $sample: { size: 10 } }];
         break;
+        
     }
      response = await db
       .collection(PRODUCTS_COLLECTION)
