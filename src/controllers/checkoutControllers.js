@@ -16,7 +16,8 @@ export async function checkoutHandlers(req, res) {
   delete data.data;
 
   await updateStock(cart);
-  await updateHistory(cart, id);
+  await checkStock(cart);
+  await updateHistory(cart, userId);
   const msg = {
     to: data.email,
     from: "sonitusstore@gmail.com", // Use the email address or domain you verified above
