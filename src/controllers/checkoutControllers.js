@@ -18,7 +18,6 @@ export async function checkoutHandlers(req, res, next) {
     res.status(400).send(response[1]);
     return;
   }
-  console.log(response);
 
   await updateStock(cart);
   await updateHistory(cart, id);
@@ -67,11 +66,6 @@ async function checkStock(cartData) {
         stockIndex.includes(index)
           ? (response += item.album + "\n" + item.artist + "\n")
           : null
-      );
-      console.log(
-        cartData.filter((item) =>
-          !response.includes(item.album) ? `${item.album}\n` : null
-        )
       );
       const outOfStockMessage = `The following items are out of stock:\n ${response}`;
       return [null, outOfStockMessage];

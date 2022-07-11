@@ -18,6 +18,4 @@ app.use(checkoutRouter);
 app.use(historyRouter);
 app.use("/user", userHandler);
 
-
-
 app.listen(PORT_IN_USE, () => console.log(`Server running from port ${PORT_IN_USE} @${Date().toString()}`));
