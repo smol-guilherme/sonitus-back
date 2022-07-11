@@ -8,38 +8,39 @@ const API_KEY = process.env.SENDGRID_API_TOKEN;
 
 sgMail.setApiKey(API_KEY);
 
-export async function checkoutHandlers(req, res, next) {
+export async function checkoutHandlers(req, res) {
   const data = res.locals.cleanData;
   const cart = [...data.data];
-  const id = res.locals.id;
+  const userId = res.locals.user.id;
+  const address = data.address;
   delete data.data;
-  const response = await checkStock(cart);
-  if (response[0] === null) {
-    res.status(400).send(response[1]);
-    return;
-  }
+   const response = await checkStock(cart);
+   if (response[0] === null) {
+     res.status(400).send(response[1]);
+     return;
+   }
 
-  await updateStock(cart);
-  await updateHistory(cart, id);
-  const msg = {
-    to: data.email,
-    from: "sonitusstore@gmail.com", // Use the email address or domain you verified above
-    subject: "Purchase info",
-    text: `Thank you for buying with us `,
-    html: "<strong>See you next time!</strong>",
-  };
-  try {
-    await sgMail.send(msg);
-  } catch (error) {
-    console.error(error);
-    if (error.response) {
-      console.error(error.response.body);
-      return res.sendStatus(500);
-    }
-  }
+   await updateStock(cart);
+   await updateHistory(cart, userId, address);
+  // const msg = {
+  //   to: data.email,
+  //   from: "sonitusstore@gmail.com", // Use the email address or domain you verified above
+  //   subject: "Purchase info",
+  //   text: `Thank you for buying with us `,
+  //   html: "<strong>See you next time!</strong>",
+  // };
+  // try {
+  //   await sgMail.send(msg);
+  // } catch (error) {
+  //   console.error(error);
+  //   if (error.response) {
+  //     console.error(error.response.body);
+  //     return res.sendStatus(500);
+  //   }
+  // }
   const purchase = "Successful";
-  res.status(200).send(purchase);
-  return;
+  return res.send(purchase).status(201);
+  
 }
 
 async function checkStock(cartData) {
@@ -95,24 +96,23 @@ async function updateStock(cart) {
   }
 }
 
-async function updateHistory(cart, id) {
+async function updateHistory(cart, userId, address) {
   const albumsId = [];
   let total = 0;
   try {
     cart.map((item) => {
-      albumsId.push(ObjectId(item._id));
+      albumsId.push(item);
       total += item.price;
     });
 
     const purchaseObject = {
-      userId: ObjectId(id),
+      addres: address,
+      userId: userId,
       albums: albumsId,
       value: total,
       date: cart[0].date
     };
-
-    await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
-
+     await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
     return;
   } catch (error) {
     return err;
