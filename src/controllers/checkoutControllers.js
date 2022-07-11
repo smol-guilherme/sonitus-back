@@ -14,30 +14,31 @@ export async function checkoutHandlers(req, res) {
   const userId = res.locals.user.id;
   const address = data.address;
   delete data.data;
+
    const response = await checkStock(cart);
    if (response[0] === null) {
      res.status(400).send(response[1]);
      return;
    }
 
-   await updateStock(cart);
-   await updateHistory(cart, userId, address);
-  // const msg = {
-  //   to: data.email,
-  //   from: "sonitusstore@gmail.com", // Use the email address or domain you verified above
-  //   subject: "Purchase info",
-  //   text: `Thank you for buying with us `,
-  //   html: "<strong>See you next time!</strong>",
-  // };
-  // try {
-  //   await sgMail.send(msg);
-  // } catch (error) {
-  //   console.error(error);
-  //   if (error.response) {
-  //     console.error(error.response.body);
-  //     return res.sendStatus(500);
-  //   }
-  // }
+    await updateStock(cart);
+    await updateHistory(cart, userId, address);
+    const msg = {
+      to: data.email,
+      from: "sonitusstore@gmail.com",
+      subject: "Purchase info",
+      text: `Thank you for buying with us `,
+      html: "<strong>See you next time!</strong>",
+    };
+    try {
+      await sgMail.send(msg);
+    }  catch (error) {
+      console.error(error);
+      if (error.response) {
+       console.error(error.response.body);
+       return res.sendStatus(500);
+     }
+   }
   const purchase = "Successful";
   return res.send(purchase).status(201);
   
@@ -104,7 +105,7 @@ async function updateHistory(cart, userId, address) {
       albumsId.push(item);
       total += item.price;
     });
-
+    
     const purchaseObject = {
       addres: address,
       userId: userId,
@@ -112,7 +113,7 @@ async function updateHistory(cart, userId, address) {
       value: total,
       date: cart[0].date
     };
-     await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
+    await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
     return;
   } catch (error) {
     return err;
