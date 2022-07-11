@@ -108,6 +108,7 @@ async function updateHistory(cart, id) {
       userId: ObjectId(id),
       albums: albumsId,
       value: total,
+      date: cart[0].date
     };
 
     await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
