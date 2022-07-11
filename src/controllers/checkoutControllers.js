@@ -2,12 +2,13 @@ import { ObjectId } from "mongodb";
 import db from "../database/database.js";
 
 const PRODUCTS_COLLECTION = process.env.MONGO_PRODUCTS_COLLECTION;
-const ACCOUNTS_COLLECTION = process.env.MONGO_ACCOUNTS_COLLECTION;
-const SESSIONS_COLLECTION = process.env.MONGO_SESSIONS_COLLECTION;
+const PURCHASES_COLLECTION = process.env.MONGO_PURCHASES_COLLECTION;
+
 
 export async function checkoutHandlers(req, res, next) {
   const data = res.locals.cleanData;
   const cart = [...data.data];
+  const id = res.locals.id;
   const headers = res.locals.headers;
   delete data.data;
   const response = await checkStock(cart);
@@ -16,21 +17,23 @@ export async function checkoutHandlers(req, res, next) {
     return;
   }
   await updateStock(cart);
-  res.status(200).send();
+  await updateHistory(cart, id);
+  res.status(200).send("Successful");
   return;
 }
 
 async function checkStock(cartData) {
-  const ids = ["The Number of the Beast", "Elvis' Golden Records"];
-  // const ids = [];
-  cartData.map((item) => ids.push(item.album));
-  // cartData.map((item) => ids.push(ObjectId(item._id)));
+  //const ids = ["The Number of the Beast", "Elvis' Golden Records"];
+  //cartData.map((item) => ids.push(item.album));
+  const ids = [];
+  cartData.map((item) => ids.push(ObjectId(item._id)));
+
   try {
     const response = await db
       .collection(PRODUCTS_COLLECTION)
       .find(
-        { album: { $in: ids } },
-        // { _id: { $in: ids } },
+        //{ album: { $in: ids } },
+        { _id: { $in: ids } },
         { stock: { $gte: "$cartData.$.quantity" } }
       )
       .toArray();
@@ -49,6 +52,7 @@ async function checkStock(cartData) {
 
 async function updateStock(cart) {
   const ids = [];
+  
   cart.map((item) => ids.push(item.album));
   console.log(ids);
   const response = []
@@ -66,4 +70,30 @@ async function updateStock(cart) {
   } catch (err) {
     return err;
   }
+}
+
+async function updateHistory (cart, id){
+  const albumsId =[];
+  let total = 0;
+  try {
+    cart.map((item) => {
+      albumsId.push(ObjectId(item._id));
+      total += item.price;
+    });
+    
+    const purchaseObject={
+      userId: ObjectId(id),
+      albums: albumsId,
+      value: total
+    }
+
+    await db
+      .collection(PURCHASES_COLLECTION)
+      .insertOne(purchaseObject)
+    
+    return 
+  } catch (error) {
+    return err;
+  }
+  
 }

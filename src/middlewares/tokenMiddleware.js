@@ -1,13 +1,12 @@
 import jwt  from "jsonwebtoken";
 const SECRET = process.env.ACCESS_TOKEN_SECRET
 
-export function authenticateToken (req, res,next){
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+export async function authenticateToken (req, res, next){
+    const token = req.headers.authorization.replace('Bearer ', '')
     if(token === null) return res.sendStatus(401);
-    jwt.verify(token, SECRET, (err, user) => {
+    jwt.verify(token, SECRET, (err, id) => {
         if(err) return res.sendStatus(403)
-        req.locals.user = user
+        res.locals.user = id
         next()
     })
 

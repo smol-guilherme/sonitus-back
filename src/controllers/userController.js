@@ -35,8 +35,7 @@ export const signIn = async (req,res) => {
         const user = await db.collection(ACCOUNTS_COLLECTION).findOne({email: login.email});
     try{
         if(user && bcrypt.compareSync(login.password, user.password)){
-            const token = jwt.sign({id: user._id}, SECRET, {expiresIn: "76h"});
-            console.log(token)
+            const token = jwt.sign({id: user._id}, SECRET, {expiresIn: "3d"});
             return res.json({token, name: user.name}).status(200);
         }else{
             return res.sendStatus(401);
