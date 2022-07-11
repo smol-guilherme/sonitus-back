@@ -1,30 +1,50 @@
 import { ObjectId } from "mongodb";
 import db from "../database/database.js";
+import sgMail from '@sendgrid/mail';
 
 const PRODUCTS_COLLECTION = process.env.MONGO_PRODUCTS_COLLECTION;
 const PURCHASES_COLLECTION = process.env.MONGO_PURCHASES_COLLECTION;
+const API_KEY = process.env.SENDGRID_API_TOKEN;
 
+sgMail.setApiKey(API_KEY);
 
 export async function checkoutHandlers(req, res, next) {
   const data = res.locals.cleanData;
   const cart = [...data.data];
   const id = res.locals.id;
-  const headers = res.locals.headers;
   delete data.data;
-  const response = await checkStock(cart);
-  if (response[0] === null) {
-    res.status(400).send(response[1]);
-    return;
+  // const response = await checkStock(cart);
+  // if (response[0] === null) {
+  //   res.status(400).send(response[1]);
+  //   return;
+  // }
+  
+  console.log(cart)
+   await updateStock(cart);
+   await updateHistory(cart, id);
+  const msg = {
+    to: data.email,
+  from: 'sonitusstore@gmail.com', // Use the email address or domain you verified above
+  subject: 'Purchase info',
+  text: `Thank you for buying with us `,
+  html: '<strong>See you next time!</strong>',
   }
-  await updateStock(cart);
-  await updateHistory(cart, id);
+  console.log(msg)
+  try {
+    await sgMail.send(msg);
+  } catch (error) {
+    console.error(error)
+    if(error.response){
+      console.error(error.response.body)
+      return res.sendStatus(500)
+    }
+  }
   res.status(200).send("Successful");
   return;
 }
 
 async function checkStock(cartData) {
-  //const ids = ["The Number of the Beast", "Elvis' Golden Records"];
-  //cartData.map((item) => ids.push(item.album));
+ 
   const ids = [];
   cartData.map((item) => ids.push(ObjectId(item._id)));
 

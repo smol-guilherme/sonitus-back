@@ -8,7 +8,10 @@ const PRODUCTS_COLLECTION = process.env.MONGO_PRODUCTS_COLLECTION;
 export async function addItem(req, res) {
   const data = req.body;
   try {
-    await db.collection(PRODUCTS_COLLECTION).insertOne({ ...data });
+    for(let i = 0; i < data.length; i ++){
+      await db.collection(PRODUCTS_COLLECTION).insertOne( data[i] );
+    }
+    
     res.status(201).send("Produto criado.");
     return;
   } catch (err) {
@@ -48,7 +51,14 @@ export async function getItems(req, res) {
       case params.home !== undefined:
         response = await getHomeData()
         return res.status(200).send(response);
-
+      
+      case params.all === "all":
+        response = await db
+          .collection(PRODUCTS_COLLECTION)
+          .find()
+          .toArray()
+        
+        return res.send(response).status(200)
       default:
         StageOne = { $match: {} };
         StageTwo = [{ $sample: { size: 10 } }];
