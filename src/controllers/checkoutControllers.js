@@ -21,16 +21,13 @@ export async function checkoutHandlers(req, res, next) {
 }
 
 async function checkStock(cartData) {
-  const ids = ["The Number of the Beast", "Elvis' Golden Records"];
-  // const ids = [];
-  cartData.map((item) => ids.push(item.album));
-  // cartData.map((item) => ids.push(ObjectId(item._id)));
+  const ids = [];
+  cartData.map((item) => ids.push(ObjectId(item._id)));
   try {
     const response = await db
       .collection(PRODUCTS_COLLECTION)
       .find(
-        { album: { $in: ids } },
-        // { _id: { $in: ids } },
+        { _id: { $in: ids } },
         { stock: { $gte: "$cartData.$.quantity" } }
       )
       .toArray();
@@ -50,11 +47,9 @@ async function checkStock(cartData) {
 async function updateStock(cart) {
   const ids = [];
   cart.map((item) => ids.push(item.album));
-  console.log(ids);
   const response = []
   try {
     for(let i = 0; i < cart.length; i++) {
-      console.log(ids[i], '\n', -cart[i].quantity);
       response.push(await db
         .collection(PRODUCTS_COLLECTION)
         .updateOne(
