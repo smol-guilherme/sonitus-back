@@ -1,5 +1,6 @@
 import db from "../database/database.js";
 
+
 const PURCHASES_COLLECTION=process.env.MONGO_PURCHASES_COLLECTION
 const CARTS_COLLECTION=process.env.MONGO_CARTS_COLLECTION
 

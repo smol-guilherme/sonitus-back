@@ -5,6 +5,6 @@ import { checkoutHandlers } from "../controllers/checkoutControllers.js";
 import { authenticateToken } from "../middlewares/tokenMiddleware.js";
 const checkoutRouter = Router();
 
-checkoutRouter.post('/checkout', clearData, userValidation, authenticateToken, checkoutHandlers);
+checkoutRouter.post('/checkout', clearData,  authenticateToken, checkoutHandlers);
 
 export default checkoutRouter;
