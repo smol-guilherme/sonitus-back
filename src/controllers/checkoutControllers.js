@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import db from "../database/database.js";
-import sgMail from '@sendgrid/mail';
+import sgMail from "@sendgrid/mail";
 
 const PRODUCTS_COLLECTION = process.env.MONGO_PRODUCTS_COLLECTION;
 const PURCHASES_COLLECTION = process.env.MONGO_PURCHASES_COLLECTION;
@@ -13,55 +13,61 @@ export async function checkoutHandlers(req, res, next) {
   const cart = [...data.data];
   const id = res.locals.id;
   delete data.data;
-  // const response = await checkStock(cart);
-  // if (response[0] === null) {
-  //   res.status(400).send(response[1]);
-  //   return;
-  // }
-  
-  console.log(cart)
-   await updateStock(cart);
-   await updateHistory(cart, id);
+  const response = await checkStock(cart);
+  if (response[0] === null) {
+    res.status(400).send(response[1]);
+    return;
+  }
+
+  await updateStock(cart);
+  await updateHistory(cart, id);
   const msg = {
     to: data.email,
-  from: 'sonitusstore@gmail.com', // Use the email address or domain you verified above
-  subject: 'Purchase info',
-  text: `Thank you for buying with us `,
-  html: '<strong>See you next time!</strong>',
-  }
-  console.log(msg)
+    from: "sonitusstore@gmail.com", // Use the email address or domain you verified above
+    subject: "Purchase info",
+    text: `Thank you for buying with us `,
+    html: "<strong>See you next time!</strong>",
+  };
   try {
     await sgMail.send(msg);
   } catch (error) {
-    console.error(error)
-    if(error.response){
-      console.error(error.response.body)
-      return res.sendStatus(500)
+    console.error(error);
+    if (error.response) {
+      console.error(error.response.body);
+      return res.sendStatus(500);
     }
   }
-  res.status(200).send("Successful");
+  const purchase = "Successful";
+  res.status(200).send(purchase);
   return;
 }
 
 async function checkStock(cartData) {
- 
   const ids = [];
-  cartData.map((item) => ids.push(ObjectId(item._id)));
-
+  const albums = [];
+  cartData.map((item) =>
+    !ids.includes(item.id) ? ids.push(ObjectId(item.id)) : null
+  );
+  cartData.map((item) =>
+    !ids.includes(item.album) ? albums.push(item.album) : null
+  );
   try {
     const response = await db
       .collection(PRODUCTS_COLLECTION)
-      .find(
-        //{ album: { $in: ids } },
-        { _id: { $in: ids } },
-        { stock: { $gte: "$cartData.$.quantity" } }
-      )
+      .find({ _id: { $in: ids } }, { stock: { $gte: "$cartData.$.quantity" } })
       .toArray();
-    if (response.length < cartData.length) {
-      // console.log(cartData.filter((item) => !response.includes(item.album) ? `${item.album}\n` : null));
-      const outOfStockMessage = `The following items are out of stock:\n ${cartData.filter(
-        (item) => (!response.includes(item.album) ? `${item.album}\n` : null)
-      )}`;
+    const stockIndex = [];
+    response.map((stock, index) =>
+      albums.includes(stock.album) ? null : stockIndex.push(index)
+    );
+    if (cartData.length !== response.length) {
+      let response = "";
+      cartData.map((item, index) =>
+        stockIndex.includes(index)
+          ? (response += item.album + "\n" + item.artist + "\n")
+          : null
+      );
+      const outOfStockMessage = `The following items are out of stock:\n ${response}`;
       return [null, outOfStockMessage];
     }
     return response;
@@ -72,19 +78,16 @@ async function checkStock(cartData) {
 
 async function updateStock(cart) {
   const ids = [];
-  
+
   cart.map((item) => ids.push(item.album));
-  console.log(ids);
-  const response = []
+  const response = [];
   try {
-    for(let i = 0; i < cart.length; i++) {
-      console.log(ids[i], '\n', -cart[i].quantity);
-      response.push(await db
-        .collection(PRODUCTS_COLLECTION)
-        .updateOne(
-          { album: ids[i] },
-          { $inc: { stock: -cart[i].quantity } }
-        ))
+    for (let i = 0; i < cart.length; i++) {
+      response.push(
+        await db
+          .collection(PRODUCTS_COLLECTION)
+          .updateOne({ album: ids[i] }, { $inc: { stock: -cart[i].quantity } })
+      );
     }
     return response;
   } catch (err) {
@@ -92,28 +95,26 @@ async function updateStock(cart) {
   }
 }
 
-async function updateHistory (cart, id){
-  const albumsId =[];
+async function updateHistory(cart, id) {
+  const albumsId = [];
   let total = 0;
   try {
     cart.map((item) => {
       albumsId.push(ObjectId(item._id));
       total += item.price;
     });
-    
-    const purchaseObject={
+
+    const purchaseObject = {
       userId: ObjectId(id),
       albums: albumsId,
-      value: total
-    }
+      value: total,
+      date: cart[0].date
+    };
 
-    await db
-      .collection(PURCHASES_COLLECTION)
-      .insertOne(purchaseObject)
-    
-    return 
+    await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
+
+    return;
   } catch (error) {
     return err;
   }
-  
 }
