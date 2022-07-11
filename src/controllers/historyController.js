@@ -7,7 +7,7 @@ export async function searchHistory (req, res){
 
     const data = await db
         .collection(PURCHASES_COLLECTION)
-        .find({id})
+        .find({userId: id})
         .toArray()
 
     return res.send(data).status(200);
