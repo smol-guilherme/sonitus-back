@@ -104,6 +104,7 @@ async function updateHistory(cart, userId, address) {
     cart.map((item) => {
       albumsId.push(item);
       total += (item.price * item.quantity);
+      
     });
    
     const purchaseObject = {
@@ -113,7 +114,6 @@ async function updateHistory(cart, userId, address) {
       value: total,
       date: cart[0].date
     };
-    console.log(purchaseObject)
     await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
     return;
   } catch (error) {
