@@ -20,7 +20,7 @@ export async function checkoutHandlers(req, res) {
      res.status(400).send(response[1]);
      return;
    }
-
+    
     await updateStock(cart);
     await updateHistory(cart, userId, address);
     const msg = {
@@ -106,7 +106,7 @@ async function updateHistory(cart, userId, address) {
       total += (item.price * item.quantity);
       
     });
-   
+
     const purchaseObject = {
       addres: address,
       userId: userId,
@@ -114,6 +114,7 @@ async function updateHistory(cart, userId, address) {
       value: total,
       date: cart[0].date
     };
+    
     await db.collection(PURCHASES_COLLECTION).insertOne(purchaseObject);
     return;
   } catch (error) {
