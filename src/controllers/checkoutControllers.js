@@ -15,33 +15,42 @@ export async function checkoutHandlers(req, res) {
   const address = data.address;
   delete data.data;
 
-   const response = await checkStock(cart);
-   if (response[0] === null) {
-     res.status(400).send(response[1]);
-     return;
-   }
-    
-    await updateStock(cart);
-    await updateHistory(cart, userId, address);
-    const msg = {
-      to: data.email,
-      from: "sonitusstore@gmail.com",
-      subject: "Purchase info",
-      text: `Thank you for buying with us `,
-      html: "<strong>See you next time!</strong>",
-    };
-    try {
-      await sgMail.send(msg);
-    }  catch (error) {
-      console.error(error);
-      if (error.response) {
-       console.error(error.response.body);
-       return res.sendStatus(500);
-     }
-   }
-  const purchase = "Successful";
-  return res.send(purchase).status(201);
-  
+  await updateStock(cart);
+  await checkStock(cart);
+  await updateHistory(cart, userId, address);
+  const msg = {
+    to: data.email,
+    from: "sonitusstore@gmail.com", // Use the email address or domain you verified above
+    subject: "Purchase info",
+    text: `Thank you for buying with us `,
+    html: `
+    <div></div><strong><h1>Thank you for purchasing from us.</h1></strong>
+    <div></div>
+    <div></div>
+    <div><h3>Your order to the Address:</h3></div>
+    <div></div>
+    <div><p>${data.address},</p></div>
+    <div><h3>Your Order:</h3></div>
+    ${cart.map(item => `<div>${item.artist}, ${item.album}: ${item.quantity}</div>`)}
+    <div><h3>Is being processed, you will be informed by e-mail for delivery updates.</h3></div>
+    <div><h3>Remember, whenever you feel down, you can always listen to some vinyls.</h3></div>
+    <div><h3>Thank you for checking out Sonitus Vinyl Store and we hope to see you again soon.</h3></div>
+    <div></div>
+    <div><h2>Best regards,</h2></div>
+    <div><h2><strong>Sonitus Vinyl Store.</strong></h2></div>`,
+  };
+  try {
+    await sgMail.send(msg);
+  } catch (error) {
+    console.error(error);
+    if (error.response) {
+      console.error(error.response.body);
+      return res.sendStatus(500);
+    }
+  }
+  const purchase = { data: "Successful" };
+  res.status(200).send(purchase);
+  return;
 }
 
 async function checkStock(cartData) {
